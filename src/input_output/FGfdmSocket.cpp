@@ -398,13 +398,22 @@ void FGfdmSocket::Send(void)
 
 void FGfdmSocket::Send(const char *data, int length)
 {
-  if (Protocol == ptTCP && sckt_in != INVALID_SOCKET) {
-    if ((send(sckt_in, data, length, 0)) == SOCKET_ERROR) LogSocketError("Send - TCP data sending");
-    return;
+  if (Protocol == ptTCP) {
+    // For TCP, use sckt_in for input sockets, and sckt for output sockets
+    if (sckt_in != INVALID_SOCKET) {
+      if ((send(sckt_in, data, length, 0)) == SOCKET_ERROR)
+        LogSocketError("Send - TCP data sending (input socket)");
+      return;
+    } else if (sckt != INVALID_SOCKET) {
+      if ((send(sckt, data, length, 0)) == SOCKET_ERROR)
+        LogSocketError("Send - TCP data sending (output socket)");
+      return;
+    }
   }
 
   if (Protocol == ptUDP && sckt != INVALID_SOCKET) {
-    if ((send(sckt, data, length, 0)) == SOCKET_ERROR) LogSocketError("Send - UDP data sending");
+    if ((send(sckt, data, length, 0)) == SOCKET_ERROR)
+      LogSocketError("Send - UDP data sending");
     return;
   }
 
